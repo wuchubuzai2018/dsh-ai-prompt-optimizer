@@ -109,7 +109,9 @@ dsh web
 
 - [技术方案设计](docs/technical-design.md)：本插件的功能拆解、架构、数据流、打包和安装设计；
 - [如何开发 JavaScript 版本插件](docs/develop-js-plugin.md)：动态 JS 插件与可安装 JS 插件的开发方式；
-- [如何开发 TypeScript 版本插件](docs/develop-ts-plugin.md)：可安装 TS/TSX 插件的完整工程化流程。
+- [如何开发 TypeScript 版本插件](docs/develop-ts-plugin.md)：可安装 TS/TSX 插件的完整工程化流程；
+- [接口端到端验证手册](docs/e2e-verification.md)：新增或修改 Host/Client 接口后的隔离环境验证步骤；
+- [发布策略](docs/publishing-strategy.md)：为什么本仓库将 lib 构建产物提交进 Git，以及发布前的检查清单。
 
 ## 贡献
 
