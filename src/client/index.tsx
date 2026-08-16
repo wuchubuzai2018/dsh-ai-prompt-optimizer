@@ -244,7 +244,13 @@ export async function apply(ctx: ClientContext): Promise<() => Promise<void>> {
   const disposers: Array<() => void> = []
 
   try {
-    promptOptimizerRemote = ctx.remote.promptOptimizer
+    // The namespace service is installed by $mount above. Read it through
+    // ctx.get(): a dotted property such as ctx.remote.promptOptimizer is
+    // guarded as an undeclared service dependency during plugin activation.
+    promptOptimizerRemote = ctx.get('remote.promptOptimizer') as PromptOptimizerRemote | undefined
+    if (promptOptimizerRemote === undefined) {
+      throw new Error('prompt optimizer Remote namespace was not installed')
+    }
     disposers.push(
       ctx.slots.inject('conversation.input.right', () =>
         ctx.slots.register(

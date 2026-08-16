@@ -23,6 +23,10 @@
       "types": "./lib/types/remote.d.ts",
       "default": "./lib/remote.js"
     },
+    "./typert": {
+      "types": "./lib/types/typert.d.ts",
+      "default": "./lib/typert.js"
+    },
     "./types": {
       "types": "./lib/types/types.d.ts",
       "default": "./lib/types.js"
@@ -34,6 +38,7 @@
     "lib/index.js",
     "lib/client.js",
     "lib/remote.js",
+    "lib/typert.js",
     "lib/types.js",
     "lib/types/**/*.d.ts",
     "lib/types/**/*.d.ts.map",

@@ -11,6 +11,7 @@
   "include": [
     "src/index.ts",
     "src/remote.ts",
+    "src/typert.ts",
     "src/types.ts"
   ]
 }
