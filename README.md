@@ -1,93 +1,123 @@
-# dsh-ai-prompt-optimizer
+# DSH AI Prompt Optimizer
 
-一个适用于 DeepSeek Harness（DSH）的动态 Cordis 插件，在聊天输入框发送按钮前增加 **“✨ AI 优化”** 按钮。
+一个用于 DeepSeek Harness（DSH）Web 聊天页面的提示词优化插件。它会在输入框发送按钮旁添加 **“✨ AI 优化”**，帮助你把粗略想法整理成更清晰、完整、可直接发送给 AI 的提示词。
 
-## 功能
+## 解决什么问题
 
-- 读取聊天输入框中的当前草稿；
-- 使用 DSH 当前配置的模型调用 `llm.stream()`；
-- 将模型返回的优化提示词写回输入框，但不会自动发送；
-- 请求期间按钮显示“优化中…”；
-- 优化成功后不显示额外状态文案；
-- 输入为空或模型调用失败时，通过独立弹窗显示错误；
-- 不传递 `temperature`、`maxTokens`、`reasoningEffort` 等可能不被部分 Provider 支持的可选字段。
+临时输入的提示词常常会缺少目标、背景、约束或期望输出格式，导致模型回答不稳定。这个插件让你在发送前一键优化当前草稿：
 
-## 仓库结构
+- 保留原始意图、语言和已知事实；
+- 补齐任务目标、上下文、约束、步骤和输出格式；
+- 信息不足时列出最少且关键的待确认项；
+- 优化结果只回填到输入框，不会自动发送，最终内容仍由你确认。
 
-```text
-dsh-ai-prompt-optimizer/
-├── src/
-│   ├── host.js      # Host 端模型调用和私有 RPC
-│   └── client.js    # 输入框按钮、草稿回填和错误弹窗
-├── .gitignore
-├── LICENSE
-├── package.json
-└── README.md
-```
+## 功能特性
 
-## DSH 动态包源码
+- **一键优化**：读取当前输入框草稿并生成优化版本；
+- **复用当前模型**：使用 DSH 已配置的默认模型，不需要单独配置 API Key；
+- **发送前确认**：优化后不会自动提交，你可以继续编辑；
+- **过程可见**：请求期间按钮显示“优化中…”；
+- **失败可感知**：输入为空、模型不可用或调用失败时，会弹出明确提示；
+- **更广模型兼容性**：只发送基础模型请求字段，避免部分 Provider 不支持可选参数而失败。
 
-`src/host.js` 和 `src/client.js` 是可直接传给 `cordis_define` 的普通 JavaScript **函数体**，不是独立的 Node.js 入口文件。它们使用 DSH 动态插件运行时提供的对象：
+## 环境要求
 
-- Host：`ctx`、`harness`
-- Client：`ctx`、`host`、`React`、`styles`
+- DeepSeek Harness Web `0.1.0-rc.6`；
+- DSH 中已经配置可用的默认模型；
+- 从源码安装时需要 Node.js 22+ 和 pnpm。
 
-代码不使用 TypeScript、JSX、`import`、`require` 或未经 Cordis Inspect 确认的浏览器全局对象。
-
-创建动态插件时使用以下信息：
-
-```text
-name: dsh-ai-prompt-optimizer
-idPrefix: prompt
-host source: src/host.js
-client source: src/client.js
-```
-
-当前开发会话中的动态实例是 `prompt-1`，但该 ID 是 DSH 在创建插件实例时分配的运行时 ID，并不是开源项目名称。其他用户创建插件后可能获得不同的 `pluginId`；仓库和插件包名称始终是 `dsh-ai-prompt-optimizer`。
-
-## 工作原理
-
-1. Client 向 `conversation.input.right` Slot 注册优化按钮；
-2. 点击按钮后，通过 Package 私有 RPC 调用 Host 的 `optimize-prompt`；
-3. Host 读取 `agentDefaultModel.currentSelection()`；
-4. Host 使用选中的 `provider` 和 `model` 调用 `llm.stream()`；
-5. Client 收到结果后调用 `inputActions.setDraft()` 回填输入框；
-6. 错误通过 `shell.overlay` Slot 中的弹窗呈现。
-
-## 模型请求兼容性
-
-模型请求仅携带以下字段：
-
-- `provider`
-- `model`
-- `system`
-- `messages`
-
-这样可以避免部分 Provider 因不支持 `temperature`、`maxTokens` 或 `reasoningEffort` 等可选字段而拒绝请求。
-
-## 安装和使用
-
-本项目当前提供的是 DSH 动态 Cordis Package 源码。使用前需要在目标 DSH 运行时中：
-
-1. 查询并确认 `llm`、`agentDefaultModel`、`conversation.input.right` 和 `shell.overlay` 的实际接口；
-2. 使用 `src/host.js` 和 `src/client.js` 创建名为 `dsh-ai-prompt-optimizer` 的动态插件；
-3. 激活生成的 Package，并在 DSH 页面完成 Client Package 授权；
-4. 在聊天输入框中输入原始提示词，然后点击 **“✨ AI 优化”**。
-
-> 动态 Cordis 插件属于当前 DSH 进程。DSH 进程重启后，动态实例可能不再存在，需要重新定义或通过持久化的 DSH 插件/组合方式安装。
-
-## 发布到 GitHub
-
-在项目工作区执行：
+如果系统通过 Corepack 管理 pnpm，可以先执行：
 
 ```bash
+corepack enable pnpm
+```
+
+## 安装
+
+### 方式一：从 npm 安装（发布后）
+
+```bash
+dsh plugin --profile web add dsh-ai-prompt-optimizer
+dsh web
+```
+
+### 方式二：从本地源码安装
+
+```bash
+git clone <你的仓库地址>
 cd dsh-ai-prompt-optimizer
-git init
-git add .
-git commit -m "feat: initial dsh-ai-prompt-optimizer plugin"
-git branch -M main
-git remote add origin <你的 GitHub 仓库地址>
-git push -u origin main
+pnpm install
+dsh plugin --profile web add .
+dsh web
+```
+
+也可以在其他目录中直接指定仓库路径：
+
+```bash
+dsh plugin --profile web add /path/to/dsh-ai-prompt-optimizer
+dsh web
+```
+
+### 方式三：从 GitHub 安装
+
+```bash
+dsh plugin --profile web add github:<owner>/<repo>
+dsh web
+```
+
+如果 pnpm 阻止 Git 依赖执行构建脚本，请按终端提示，把对应 key 加入 DSH profile 目录下 `pnpm-workspace.yaml` 的 `allowBuilds`，然后重新执行安装命令。
+
+## 使用方法
+
+1. 打开 DSH Web 聊天页面；
+2. 在输入框中写下原始需求，例如“帮我写一个周报”；
+3. 点击发送按钮旁的 **“✨ AI 优化”**；
+4. 等待优化完成；
+5. 检查回填后的提示词，可以继续修改，确认后再发送。
+
+> 注意：优化结果会替换当前输入框草稿。如果原文很重要，请先复制保存。
+
+## 卸载
+
+```bash
+dsh plugin --profile web remove dsh-ai-prompt-optimizer
+dsh web
+```
+
+## 常见问题
+
+### 点击按钮后提示“当前没有可用的模型配置”
+
+请先在 DSH 的模型设置中配置并选择一个可用模型，然后重试。
+
+### 安装后没有看到按钮
+
+请确认：
+
+1. 插件安装到了 `web` profile；
+2. 安装后已经重启 `dsh web`；
+3. 当前页面是聊天会话页面；
+4. 执行 `dsh --profile web --dump-config` 时能看到 `ai-prompt-optimizer`。
+
+### 优化结果不理想
+
+插件会尽量保留你的原始意图，但原始信息过少时，模型只能补充有限的结构。建议至少写清楚“要做什么、给谁看、希望输出什么形式”。
+
+## 开发文档
+
+面向插件开发者和维护者的技术文档位于 `docs/`：
+
+- [技术方案设计](docs/technical-design.md)：本插件的功能拆解、架构、数据流、打包和安装设计；
+- [如何开发 JavaScript 版本插件](docs/develop-js-plugin.md)：动态 JS 插件与可安装 JS 插件的开发方式；
+- [如何开发 TypeScript 版本插件](docs/develop-ts-plugin.md)：可安装 TS/TSX 插件的完整工程化流程。
+
+## 贡献
+
+提交改动前请至少运行：
+
+```bash
+pnpm run typecheck
+pnpm run pack:check
 ```
 
 ## License

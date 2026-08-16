@@ -1,0 +1,5 @@
+# dsh-ai-prompt-optimizer bundle patch. `dsh plugin --profile web add …`
+# discovers this layer through package.json's dsh.bundle declaration.
+- insert:
+    - id: ai-prompt-optimizer
+      name: 'dsh-ai-prompt-optimizer'
