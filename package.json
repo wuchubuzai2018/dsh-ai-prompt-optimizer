@@ -4,6 +4,14 @@
   "private": false,
   "description": "AI-powered prompt optimizer for the DeepSeek Harness chat composer",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wuchubuzai2018/dsh-ai-prompt-optimizer.git"
+  },
+  "homepage": "https://github.com/wuchubuzai2018/dsh-ai-prompt-optimizer#readme",
+  "bugs": {
+    "url": "https://github.com/wuchubuzai2018/dsh-ai-prompt-optimizer/issues"
+  },
   "type": "module",
   "main": "lib/index.js",
   "types": "lib/types/index.d.ts",
